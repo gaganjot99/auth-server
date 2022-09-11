@@ -6,19 +6,19 @@ const db = new sqlite3.Database("./db/users.db", (err) => {
     console.log(err);
   }
   console.log("in file database connected");
-  //   db.run(
-  //     "CREATE TABLE users (username TEXT, password TEXT, salt TEXT)",
-  //     [],
-  //     (err) => {
-  //       if (err) {
-  //         return console.log(err);
-  //       }
-  //       console.log("table created");
+  // db.run(
+  //   "CREATE TABLE users (username TEXT, password TEXT, salt TEXT)",
+  //   [],
+  //   (err) => {
+  //     if (err) {
+  //       return console.log(err);
   //     }
-  //   );
+  //     console.log("table created");
+  //   }
+  // );
 
   //   db.run(
-  //     "INSERT INTO users (username, password ) VALUES ('gagan', 'gagan@54')",
+  //     "INSERT INTO users (email, password ) VALUES ('gagan', 'gagan@54')",
   //     [],
   //     (err) => {
   //       if (err) {
