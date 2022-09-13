@@ -4,10 +4,28 @@ const LocalStrategy = require("passport-local");
 const crypto = require("crypto");
 const { db } = require("./db");
 const bodyParser = require("body-parser");
+const path = require("path");
+const ensureLogIn = require("connect-ensure-login").ensureLoggedIn;
 
 const authRouter = express.Router();
 
+const ensureLoggedIn = ensureLogIn();
+
 authRouter.use(bodyParser.urlencoded({ extended: true }));
+
+authRouter.get("/", ensureLoggedIn, (req, res) => {
+  res.sendFile(path.resolve("../build/main.html"));
+});
+
+authRouter.use(express.static("../build"));
+
+authRouter.get("/login", (req, res) => {
+  res.sendFile(path.resolve("../build/index.html"));
+});
+
+authRouter.get("/user", ensureLoggedIn, (req, res) => {
+  res.json({ user: req.user, id: req.id });
+});
 
 passport.serializeUser(function (user, cb) {
   process.nextTick(function () {
@@ -42,7 +60,18 @@ authRouter.post("/signup", function (req, res, next) {
           if (err) {
             return next(err);
           }
-          res.redirect("/");
+          var user = {
+            id: this.lastID,
+            username: req.body.username,
+          };
+          req.login(user, function (err) {
+            if (err) {
+              return next(err);
+            }
+
+            console.log(this.lastID);
+            res.redirect("/");
+          });
         }
       );
     }
@@ -102,5 +131,14 @@ authRouter.post(
     failureMessage: true,
   })
 );
+
+authRouter.get("/logout", function (req, res, next) {
+  req.logout(function (err) {
+    if (err) {
+      return next(err);
+    }
+    res.redirect("/login");
+  });
+});
 
 module.exports = { authRouter };
