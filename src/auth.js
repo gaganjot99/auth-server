@@ -80,7 +80,6 @@ authRouter.post("/signup", function (req, res, next) {
 
 passport.use(
   new LocalStrategy(function verify(username, password, cb) {
-    console.log("atleast I'm inside");
     db.get(
       "SELECT * FROM users WHERE username = ?",
       [username],
