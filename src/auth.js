@@ -2,7 +2,7 @@ const express = require("express");
 const passport = require("passport");
 const LocalStrategy = require("passport-local");
 const crypto = require("crypto");
-const { db } = require("./db");
+const { db, addUserData, findUser } = require("./db");
 const bodyParser = require("body-parser");
 const path = require("path");
 const ensureLogIn = require("connect-ensure-login").ensureLoggedIn;
@@ -53,50 +53,40 @@ authRouter.post("/signup", function (req, res, next) {
       if (err) {
         return next(err);
       }
-      db.run(
-        "INSERT INTO users (username, password, salt) VALUES (?, ?, ?)",
-        [req.body.username, hashedPassword, salt],
-        function (err) {
-          if (err) {
-            return next(err);
-          }
-          var user = {
-            id: this.lastID,
-            username: req.body.username,
-          };
-          req.login(user, function (err) {
+      const data = {
+        username: req.body.username,
+        email: req.body.email,
+        password: hashedPassword,
+        salt: salt,
+      };
+      addUserData(data)
+        .then((data) => {
+          console.log("user added with ID: ", data.id);
+          req.login(data, function (err) {
             if (err) {
               return next(err);
             }
-
-            console.log(this.lastID);
             res.redirect("/");
           });
-        }
-      );
+        })
+        .catch((err) => console.log(err));
     }
   );
 });
 
 passport.use(
   new LocalStrategy(function verify(username, password, cb) {
-    db.get(
-      "SELECT * FROM users WHERE username = ?",
-      [username],
-      function (err, row) {
-        if (err) {
-          return cb(err);
-        }
-        if (!row) {
+    findUser(username)
+      .then((data) => {
+        if (!data) {
           console.log("users not found");
           return cb(null, false, {
-            message: "Incorrect username or password.",
+            message: "Incurrect username or password.",
           });
         }
-
         crypto.pbkdf2(
           password,
-          row.salt,
+          data.salt,
           310000,
           32,
           "sha256",
@@ -104,17 +94,17 @@ passport.use(
             if (err) {
               return cb(err);
             }
-            if (!crypto.timingSafeEqual(row.password, hashedPassword)) {
+            if (!crypto.timingSafeEqual(data.password, hashedPassword)) {
               console.log("passwords didn't match");
               return cb(null, false, {
                 message: "Incorrect username or password.",
               });
             }
-            return cb(null, row);
+            return cb(null, data);
           }
         );
-      }
-    );
+      })
+      .catch((err) => cb(err));
   })
 );
 

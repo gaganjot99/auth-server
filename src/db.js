@@ -6,31 +6,21 @@ const db = new sqlite3.Database("./db/users.db", (err) => {
   }
   console.log("in file database connected");
   db.serialize(() => {
-    createUserTable();
-    createNotesTable();
-    addUserData({
-      username: "johnsnow",
-      email: "johncommander@nw.com",
-      password: "IamTargareon",
-      salt: "knowsNothing",
-    });
-    addNotesData({
-      heading: "default header",
-      content: "something about something",
-      user_id: 1,
-    });
+    //createUserTable();
+    //createNotesTable();
+    // addUserData({
+    //   username: "johnsnow",
+    //   email: "johncommander@nw.com",
+    //   password: "IamTargareon",
+    //   salt: "knowsNothing",
+    // }).then((data) => console.log(data));
+    // addNotesData({
+    //   heading: "default header",
+    //   content: "something about something",
+    //   user_id: 1,
+    // });
     showAllUserData();
     showAllNotesData();
-    setTimeout(() => {
-      db.serialize(() => {
-        updateNotesData({
-          heading: "new header",
-          content: "something new about something",
-          user_id: 1,
-        });
-        showAllNotesData();
-      });
-    }, 5000);
   });
 });
 
@@ -61,17 +51,38 @@ const createNotesTable = () => {
 };
 
 const addUserData = (data) => {
-  db.run(
-    "INSERT INTO users(username, email, password, salt) values(?, ?, ?, ? )",
-    [data.username, data.email, data.password, data.salt],
-    (err) => {
-      if (err) {
-        return console.log(err);
+  return new Promise((res, rej) => {
+    db.run(
+      "INSERT INTO users(username, email, password, salt) values(?, ?, ?, ? )",
+      [data.username, data.email, data.password, data.salt],
+      function (err) {
+        if (err) {
+          rej(err);
+        }
+        res({
+          id: this.lastID,
+          username: data.username,
+        });
       }
-      console.log("User data added");
-    }
-  );
+    );
+  });
 };
+
+const findUser = (username) => {
+  return new Promise((res, rej) => {
+    db.get(
+      "Select * from users where username=?",
+      [username],
+      function (err, row) {
+        if (err) {
+          return rej(err);
+        }
+        return res(row);
+      }
+    );
+  });
+};
+
 const addNotesData = (data) => {
   db.run(
     "INSERT INTO notes (heading, content, user_id) values(?, ?, ?)",
@@ -120,4 +131,4 @@ const showAllNotesData = () => {
   });
 };
 
-module.exports = { db };
+module.exports = { db, findUser, addUserData, addNotesData, updateNotesData };
