@@ -2,10 +2,11 @@ const express = require("express");
 const passport = require("passport");
 const LocalStrategy = require("passport-local");
 const crypto = require("crypto");
-const { db, addUserData, findUser } = require("./db");
+const { addUserData, findUser } = require("./db");
 const bodyParser = require("body-parser");
 const path = require("path");
 const ensureLogIn = require("connect-ensure-login").ensureLoggedIn;
+const { dataRouter } = require("./data");
 
 const authRouter = express.Router();
 
@@ -19,23 +20,19 @@ authRouter.get("/", ensureLoggedIn, (req, res) => {
 
 authRouter.use(express.static("../build"));
 
+authRouter.use("/data", ensureLoggedIn, dataRouter);
+
 authRouter.get("/login", (req, res) => {
   res.sendFile(path.resolve("../build/index.html"));
 });
 
-authRouter.get("/user", ensureLoggedIn, (req, res) => {
-  res.json({ user: req.user, id: req.id });
-});
-
 passport.serializeUser(function (user, cb) {
   process.nextTick(function () {
-    console.log("I'm serializing");
-    cb(null, { id: user.id, username: user.username });
+    cb(null, { user_id: user.user_id, username: user.username });
   });
 });
 
 passport.deserializeUser(function (user, cb) {
-  console.log("I'm deserializing");
   process.nextTick(function () {
     return cb(null, user);
   });
@@ -61,7 +58,7 @@ authRouter.post("/signup", function (req, res, next) {
       };
       addUserData(data)
         .then((data) => {
-          console.log("user added with ID: ", data.id);
+          console.log("user added with ID: ", data.user_id);
           req.login(data, function (err) {
             if (err) {
               return next(err);
@@ -81,7 +78,7 @@ passport.use(
         if (!data) {
           console.log("users not found");
           return cb(null, false, {
-            message: "Incurrect username or password.",
+            message: "Incorrect username or password.",
           });
         }
         crypto.pbkdf2(
@@ -100,6 +97,7 @@ passport.use(
                 message: "Incorrect username or password.",
               });
             }
+            console.log("user info:", data);
             return cb(null, data);
           }
         );
@@ -110,13 +108,9 @@ passport.use(
 
 authRouter.post(
   "/login/password",
-  (req, res, next) => {
-    console.log(req.body);
-    next();
-  },
   passport.authenticate("local", {
     successReturnToOrRedirect: "/",
-    failureRedirect: "/login",
+    failureRedirect: "/logout",
     failureMessage: true,
   })
 );
