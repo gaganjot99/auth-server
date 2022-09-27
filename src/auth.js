@@ -14,6 +14,11 @@ const ensureLoggedIn = ensureLogIn();
 
 authRouter.use(bodyParser.urlencoded({ extended: true }));
 
+authRouter.use((req, res, next) => {
+  console.log(req.path);
+  next();
+});
+
 authRouter.get("/", ensureLoggedIn, (req, res) => {
   res.sendFile(path.resolve("../build/main.html"));
 });
@@ -116,26 +121,27 @@ passport.use(
   })
 );
 
+// authRouter.post(
+//   "/login/password",
+//   passport.authenticate("local", {
+//     successReturnToOrRedirect: "/",
+//     failureRedirect: "/wrongpassword",
+//     failureMessage: true,
+//   })
+// );
+
 authRouter.post(
   "/login/password",
-  passport.authenticate("local", {
-    successReturnToOrRedirect: "/",
-    failureRedirect: "/wrongpassword",
-    failureMessage: true,
-  })
-);
-
-authRouter.get("/wrongpassword", (req, res) => {
-  req.logout(function (err) {
-    if (err) {
-      return console(err);
-    }
-  });
-  if (req.session.messages.includes("Incorrect username")) {
-    return res.json({ user: false, authenticate: false });
+  passport.authenticate("local", { failWithError: true }),
+  function (req, res, next) {
+    // handle success
+    return res.json({ id: req.user.user_id });
+  },
+  function (err, req, res, next) {
+    // handle error
+    return res.json(err);
   }
-  return res.json({ user: true, authenticate: false });
-});
+);
 
 authRouter.get("/logout", function (req, res, next) {
   req.logout(function (err) {
