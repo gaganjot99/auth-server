@@ -6,27 +6,14 @@ const db = new sqlite3.Database("./db/users.db", (err) => {
   }
   console.log("in file database connected");
   db.serialize(() => {
-    // createUserTable();
-    // createNotesTable();
-    // addUserData({
-    //   username: "johnsnow",
-    //   email: "johncommander@nw.com",
-    //   password: "IamTargareon",
-    //   salt: "knowsNothing",
-    // }).then((data) => console.log(data));
-    // addNotesData({
-    //   heading: "default header",
-    //   content: "something about something",
-    //   user_id: 2,
-    // });
-    showAllUserData();
-    showAllNotesData();
+    createUserTable();
+    createNotesTable();
   });
 });
 
 const createUserTable = () => {
   db.run(
-    "CREATE TABLE users (user_id INTEGER PRIMARY KEY, username VARCHAR(50) UNIQUE NOT NULL, email VARCHAR(50) NOT NULL, password TEXT NOT NULL, salt TEXT NOT NULL)",
+    "CREATE TABLE IF NOT EXISTS users (user_id INTEGER PRIMARY KEY, username VARCHAR(50) UNIQUE NOT NULL, email VARCHAR(50) NOT NULL, password TEXT NOT NULL, salt TEXT NOT NULL)",
     [],
     (err) => {
       if (err) {
@@ -39,7 +26,7 @@ const createUserTable = () => {
 
 const createNotesTable = () => {
   db.run(
-    "CREATE TABLE notes (note_id INTEGER PRIMARY KEY, heading VARCHAR(50) NOT NULL, content TEXT NOT NULL, created_on TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL, modified_on TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL, user_id INT NOT NULL, FOREIGN KEY(user_id) REFERENCES users(user_id))",
+    "CREATE TABLE IF NOT EXISTS notes (note_id INTEGER PRIMARY KEY, heading VARCHAR(50) NOT NULL, content TEXT NOT NULL, created_on TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL, modified_on TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL, user_id INT NOT NULL, FOREIGN KEY(user_id) REFERENCES users(user_id))",
     [],
     (err) => {
       if (err) {
@@ -71,7 +58,7 @@ const addUserData = (data) => {
 const findUser = (username) => {
   return new Promise((res, rej) => {
     db.get(
-      "Select * from users where username=?",
+      "SELECT * FROM users WHERE username=? LIMIT 1",
       [username],
       function (err, row) {
         if (err) {
@@ -97,7 +84,7 @@ const allNotesData = (user_id) => {
 const addNotesData = (data) => {
   return new Promise((res, rej) => {
     db.run(
-      "INSERT INTO notes (heading, content, user_id) values(?, ?, ?)",
+      "INSERT INTO notes (heading, content, user_id) VALUES(?, ?, ?)",
       [data.heading, data.content, data.user_id],
       function (err) {
         if (err) {
@@ -121,14 +108,14 @@ const addNotesData = (data) => {
 const updateNotesData = (data) => {
   return new Promise((res, rej) => {
     db.run(
-      "UPDATE notes SET heading = ?, content = ?, modified_on = CURRENT_TIMESTAMP WHERE note_id=? and user_id=?",
+      "UPDATE notes SET heading = ?, content = ?, modified_on = CURRENT_TIMESTAMP WHERE note_id=? AND user_id=?",
       [data.heading, data.content, data.note_id, data.user_id],
       function (err) {
         if (err) {
           return rej(err);
         }
         db.get(
-          "SELECT * FROM notes where note_id = ?",
+          "SELECT * FROM notes WHERE note_id = ?",
           [data.note_id],
           function (err, row) {
             if (err) {
@@ -154,28 +141,6 @@ const deleteNote = (noteId, userId) => {
         return res({ status: "success" });
       }
     );
-  });
-};
-
-const showAllUserData = () => {
-  db.all("SELECT * FROM users", [], (err, rows) => {
-    if (err) {
-      return console.log(err);
-    }
-    rows.forEach((element) => {
-      console.log(element);
-    });
-  });
-};
-
-const showAllNotesData = () => {
-  db.all("SELECT * FROM notes", [], (err, rows) => {
-    if (err) {
-      return console.log(err);
-    }
-    rows.forEach((element) => {
-      console.log(element);
-    });
   });
 };
 

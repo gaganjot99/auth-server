@@ -38,6 +38,20 @@ passport.deserializeUser(function (user, cb) {
   });
 });
 
+authRouter.get("/verifyname/:username", (req, res) => {
+  findUser(req.params.username)
+    .then((data) => {
+      if (!data) {
+        return res.json({ status: "no user found" });
+      }
+      res.json({
+        status: "found user",
+        username: data.username,
+      });
+    })
+    .catch((err) => console.log(err));
+});
+
 authRouter.post("/signup", function (req, res, next) {
   var salt = crypto.randomBytes(16);
   crypto.pbkdf2(
@@ -58,7 +72,6 @@ authRouter.post("/signup", function (req, res, next) {
       };
       addUserData(data)
         .then((data) => {
-          console.log("user added with ID: ", data.user_id);
           req.login(data, function (err) {
             if (err) {
               return next(err);
@@ -76,9 +89,8 @@ passport.use(
     findUser(username)
       .then((data) => {
         if (!data) {
-          console.log("users not found");
           return cb(null, false, {
-            message: "Incorrect username or password.",
+            message: "Incorrect username",
           });
         }
         crypto.pbkdf2(
@@ -92,12 +104,10 @@ passport.use(
               return cb(err);
             }
             if (!crypto.timingSafeEqual(data.password, hashedPassword)) {
-              console.log("passwords didn't match");
               return cb(null, false, {
-                message: "Incorrect username or password.",
+                message: "Incorrect password.",
               });
             }
-            console.log("user info:", data);
             return cb(null, data);
           }
         );
@@ -110,10 +120,22 @@ authRouter.post(
   "/login/password",
   passport.authenticate("local", {
     successReturnToOrRedirect: "/",
-    failureRedirect: "/logout",
+    failureRedirect: "/wrongpassword",
     failureMessage: true,
   })
 );
+
+authRouter.get("/wrongpassword", (req, res) => {
+  req.logout(function (err) {
+    if (err) {
+      return console(err);
+    }
+  });
+  if (req.session.messages.includes("Incorrect username")) {
+    return res.json({ user: false, authenticate: false });
+  }
+  return res.json({ user: true, authenticate: false });
+});
 
 authRouter.get("/logout", function (req, res, next) {
   req.logout(function (err) {
@@ -122,6 +144,10 @@ authRouter.get("/logout", function (req, res, next) {
     }
     res.redirect("/login");
   });
+});
+
+authRouter.use((req, res) => {
+  res.redirect("/404.html");
 });
 
 module.exports = { authRouter };
