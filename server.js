@@ -20,5 +20,5 @@ app.use(passport.authenticate("session"));
 app.use("/", authRouter);
 
 app.listen(4000, () => {
-  console.log("server is running at 4000");
+  console.log("server is running at 'http://localhost:4000/'");
 });

@@ -33,7 +33,7 @@ dataRouter.get("/notes", (req, res) => {
 });
 
 dataRouter.post("/addnotes", (req, res) => {
-  addNotesData(req.body)
+  addNotesData({ user_id: req.user.user_id, ...req.body })
     .then((data) => {
       res.json(data);
     })
@@ -42,11 +42,7 @@ dataRouter.post("/addnotes", (req, res) => {
 
 dataRouter.post("/updatenote", (req, res) => {
   // Another authenticated user can't change someone's else data
-  if (+req.body.user_id !== +req.user.user_id) {
-    console.log(req.body.user_id, " fi ", req.user.user_id);
-    return res.json({ status: "unautherised action" });
-  }
-  updateNotesData(req.body)
+  updateNotesData({ user_id: req.user.user_id, ...req.body })
     .then((data) => {
       res.json(data);
     })
