@@ -2,11 +2,12 @@ const express = require("express");
 const session = require("express-session");
 const passport = require("passport");
 const SQLiteStore = require("connect-sqlite3")(session);
+const morgan = require("morgan");
 
 const { authRouter } = require("./src/auth");
 
 const app = express();
-
+app.use(morgan("tiny"));
 app.use(
   session({
     secret: "keyboard cat",

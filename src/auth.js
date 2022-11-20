@@ -15,7 +15,7 @@ const ensureLoggedIn = ensureLogIn();
 authRouter.use(bodyParser.urlencoded({ extended: true }));
 
 authRouter.get("/", ensureLoggedIn, (req, res) => {
-  res.sendFile(path.resolve("../build/main.html"));
+  res.sendFile(path.resolve("../build/index.html"));
 });
 
 authRouter.use(express.static("../build"));

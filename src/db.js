@@ -70,6 +70,21 @@ const findUser = (username) => {
   });
 };
 
+const selectedNotesData = (user_id, from, upto) => {
+  return new Promise((res, rej) => {
+    db.all(
+      "SELECT * FROM notes WHERE user_id = ? AND created_on > ? AND created_on < ?",
+      [user_id, from, upto],
+      (err, rows) => {
+        if (err) {
+          return rej(err);
+        }
+        return res(rows);
+      }
+    );
+  });
+};
+
 const allNotesData = (user_id) => {
   return new Promise((res, rej) => {
     db.all("SELECT * FROM notes WHERE user_id = ?", [user_id], (err, rows) => {
@@ -151,4 +166,5 @@ module.exports = {
   allNotesData,
   updateNotesData,
   deleteNote,
+  selectedNotesData,
 };

@@ -5,9 +5,12 @@ const {
   addNotesData,
   updateNotesData,
   deleteNote,
+  selectedNotesData,
 } = require("./db");
 
 const dataRouter = express.Router();
+
+dataRouter.use(express.json());
 
 dataRouter.get("/user", (req, res) => {
   findUser(req.user.username)
@@ -20,6 +23,19 @@ dataRouter.get("/user", (req, res) => {
         user_id: data.user_id,
         email: data.email,
       });
+    })
+    .catch((err) => console.log(err));
+});
+
+dataRouter.post("/notes/dated", (req, res) => {
+  const from = req.body.from;
+  const upto = req.body.upto;
+  if (!from || !upto) {
+    return res.json({ error: "from and upto fields are not present" });
+  }
+  selectedNotesData(req.user.user_id, from, upto)
+    .then((data) => {
+      res.json(data);
     })
     .catch((err) => console.log(err));
 });
