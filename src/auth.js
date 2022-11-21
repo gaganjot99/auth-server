@@ -20,6 +20,10 @@ authRouter.get("/", ensureLoggedIn, (req, res) => {
 
 authRouter.use(express.static("../build"));
 
+authRouter.use((req, res, next) => {
+  setTimeout(next, 500);
+});
+
 authRouter.use("/data", ensureLoggedIn, dataRouter);
 
 authRouter.get("/login", (req, res) => {

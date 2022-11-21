@@ -85,6 +85,21 @@ const selectedNotesData = (user_id, from, upto) => {
   });
 };
 
+const oneNoteData = (user_id, note_id) => {
+  return new Promise((res, rej) => {
+    db.get(
+      "SELECT * FROM notes WHERE user_id = ? AND note_id = ?",
+      [user_id, note_id],
+      (err, rows) => {
+        if (err) {
+          return rej(err);
+        }
+        return res(rows);
+      }
+    );
+  });
+};
+
 const allNotesData = (user_id) => {
   return new Promise((res, rej) => {
     db.all("SELECT * FROM notes WHERE user_id = ?", [user_id], (err, rows) => {
@@ -167,4 +182,5 @@ module.exports = {
   updateNotesData,
   deleteNote,
   selectedNotesData,
+  oneNoteData,
 };

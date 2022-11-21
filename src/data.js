@@ -6,6 +6,7 @@ const {
   updateNotesData,
   deleteNote,
   selectedNotesData,
+  oneNoteData,
 } = require("./db");
 
 const dataRouter = express.Router();
@@ -42,6 +43,14 @@ dataRouter.post("/notes/dated", (req, res) => {
 
 dataRouter.get("/notes", (req, res) => {
   allNotesData(req.user.user_id)
+    .then((data) => {
+      res.json(data);
+    })
+    .catch((err) => console.log(err));
+});
+
+dataRouter.get("/note/:note_id", (req, res) => {
+  oneNoteData(req.user.user_id, req.params.note_id)
     .then((data) => {
       res.json(data);
     })
