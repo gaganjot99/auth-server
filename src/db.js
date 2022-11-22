@@ -73,7 +73,7 @@ const findUser = (username) => {
 const selectedNotesData = (user_id, from, upto) => {
   return new Promise((res, rej) => {
     db.all(
-      "SELECT * FROM notes WHERE user_id = ? AND created_on > ? AND created_on < ?",
+      "SELECT * FROM notes WHERE user_id = ? AND created_on > ? AND created_on < ? ORDER BY created_on DESC",
       [user_id, from, upto],
       (err, rows) => {
         if (err) {
@@ -102,12 +102,16 @@ const oneNoteData = (user_id, note_id) => {
 
 const allNotesData = (user_id) => {
   return new Promise((res, rej) => {
-    db.all("SELECT * FROM notes WHERE user_id = ?", [user_id], (err, rows) => {
-      if (err) {
-        return rej(err);
+    db.all(
+      "SELECT * FROM notes WHERE user_id = ? ORDER BY created_on DESC",
+      [user_id],
+      (err, rows) => {
+        if (err) {
+          return rej(err);
+        }
+        return res(rows);
       }
-      return res(rows);
-    });
+    );
   });
 };
 
